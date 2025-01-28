@@ -18,15 +18,12 @@ A blazingly fast S3 file uploader with a beautiful CLI interface, powered by Bun
 
 ### Quick Install (Recommended)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ralf-boltshauser/filesfly/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/ralf-boltshauser/filesfly/master/install.sh | bash
 ```
 
 ### Manual Installation
 ```bash
-# Install globally using bun
-bun install -g filesfly
-
-# Or install from source
+# Install from source
 git clone https://github.com/ralf-boltshauser/filesfly.git
 cd filesfly
 bun install
@@ -49,15 +46,23 @@ Create a configuration file at `~/.config/filesfly/filesfly.json`:
 
 ## 📖 Usage
 
+FilesFly provides several commands to manage your S3 files:
+
 ```bash
-# Upload a file
-ff image.jpg
+# Test your S3 connection
+ff check
 
-# Upload with custom name
-ff image.jpg -o profile-pic.jpg
+# Upload files
+ff upload image.jpg                # Upload with original filename
+ff upload data.csv -o report.csv   # Upload with custom filename
+ff image.jpg                       # Quick upload (shorthand)
 
-# Delete a file
-ff image.jpg -d
+# Delete files
+ff delete image.jpg               # Delete a file from S3
+
+# Get help
+ff --help                         # Show all commands
+ff upload --help                  # Show upload options
 ```
 
 ## 🛠️ Development

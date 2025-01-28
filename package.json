@@ -1,6 +1,6 @@
 {
   "name": "filesfly",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A blazingly fast S3 file uploader with a beautiful CLI interface",
   "author": "Ralf Boltshauser",
   "license": "MIT",

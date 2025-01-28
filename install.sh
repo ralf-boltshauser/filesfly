@@ -25,41 +25,86 @@ if ! command -v git &> /dev/null; then
     exit 1
 fi
 
-# Create config directory
+# Create necessary directories
 CONFIG_DIR="$HOME/.config/filesfly"
+INSTALL_DIR="$HOME/.local/lib/filesfly"
 mkdir -p "$CONFIG_DIR"
-
-# Create a temporary directory for installation
-TEMP_DIR=$(mktemp -d)
-cd "$TEMP_DIR"
+mkdir -p "$INSTALL_DIR"
+mkdir -p "$HOME/.local/bin"
 
 # Clone the repository
 echo -e "${BLUE}Cloning FilesFly repository...${NC}"
-git clone https://github.com/ralf-boltshauser/filesfly.git
-cd filesfly
+git clone https://github.com/ralf-boltshauser/filesfly.git "$INSTALL_DIR"
+cd "$INSTALL_DIR"
+
+# Make source binary executable
+chmod +x bin/ff.ts
 
 # Install dependencies and link globally
 echo -e "${BLUE}Installing dependencies...${NC}"
 bun install
 bun link
 
-# Clean up
-cd
-rm -rf "$TEMP_DIR"
+# Determine shell and config file
+PATH_UPDATES="# Add Bun and local binaries to PATH
+export PATH=\"\$HOME/.local/bin:\$HOME/.bun/bin:\$PATH\""
 
-# Check if installation was successful
-if command -v ff &> /dev/null; then
-    echo -e "${GREEN}FilesFly installed successfully!${NC}"
-    echo -e "\nTo configure FilesFly, create a config file at: ${BLUE}~/.config/filesfly/filesfly.json${NC}"
-    echo -e "Example configuration:"
-    echo -e '{
+SHELL_NAME=$(basename "$SHELL")
+SHELL_CONFIG=""
+
+case "$SHELL_NAME" in
+    "zsh")
+        if [ -f "$HOME/.zshrc" ]; then
+            SHELL_CONFIG="$HOME/.zshrc"
+        fi
+        ;;
+    "bash")
+        # Try common bash config files in order
+        for conf in "$HOME/.bashrc" "$HOME/.bash_profile" "$HOME/.profile"; do
+            if [ -f "$conf" ]; then
+                SHELL_CONFIG="$conf"
+                break
+            fi
+        done
+        ;;
+    *)
+        # For other shells, try to find a suitable config
+        for conf in "$HOME/.profile" "$HOME/.${SHELL_NAME}rc"; do
+            if [ -f "$conf" ]; then
+                SHELL_CONFIG="$conf"
+                break
+            fi
+        done
+        ;;
+esac
+
+# If no config file found, create .profile
+if [ -z "$SHELL_CONFIG" ]; then
+    SHELL_CONFIG="$HOME/.profile"
+    echo -e "${YELLOW}No shell config file found. Creating $SHELL_CONFIG${NC}"
+    touch "$SHELL_CONFIG"
+fi
+
+# Add PATH updates if not already present
+if ! grep -q "Add Bun and local binaries to PATH" "$SHELL_CONFIG" 2>/dev/null; then
+    echo -e "\n$PATH_UPDATES" >> "$SHELL_CONFIG"
+    echo -e "${BLUE}Added PATH updates to $SHELL_CONFIG${NC}"
+fi
+
+# Export PATH immediately for this session
+export PATH="$HOME/.local/bin:$HOME/.bun/bin:$PATH"
+
+echo -e "${GREEN}FilesFly installed successfully!${NC}"
+echo -e "\nTo configure FilesFly, create a config file at: ${BLUE}~/.config/filesfly/filesfly.json${NC}"
+echo -e "Example configuration:"
+echo -e '{
   "ENDPOINT": "your-endpoint",
   "ACCESS_KEY_ID": "your-access-key",
   "SECRET_ACCESS_KEY": "your-secret",
   "BUCKET": "your-bucket",
   "REGION": "your-region"
 }'
-else
-    echo -e "${RED}Installation failed. Please try again or install manually.${NC}"
-    exit 1
-fi 
+
+echo -e "\n${YELLOW}To start using FilesFly, either:${NC}"
+echo -e "1. Restart your terminal, or"
+echo -e "2. Run this command: ${BLUE}source $SHELL_CONFIG${NC}" 

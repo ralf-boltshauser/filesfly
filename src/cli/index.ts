@@ -3,7 +3,7 @@ import { Command } from 'commander';
 import { basename } from 'path';
 import packageJson from '../../package.json';
 import { loadConfig } from '../config';
-import { createS3Client } from '../s3/client';
+import { checkConnection, createS3Client } from '../s3/client';
 import { deleteFile } from '../s3/delete';
 import { uploadFile } from '../s3/upload';
 import { sanitizeFileName } from '../utils/file';
@@ -13,20 +13,62 @@ import { sanitizeFileName } from '../utils/file';
  * @returns Configured Commander instance
  */
 export function setupCLI(): Command {
-  return new Command()
+  const program = new Command()
     .name('ff')
     .description(colors.cyan('FilesFly - Fast and beautiful S3 file uploader'))
-    .version(packageJson.version)
-    .argument('<file>', 'File path to upload or S3 file to delete')
+    .version(packageJson.version);
+
+  // Check command
+  program
+    .command('check')
+    .description('Test S3 connection and configuration')
+    .action(async () => {
+      await loadConfig();
+      const client = createS3Client();
+      await checkConnection(client);
+    });
+
+  // Upload command (default)
+  program
+    .command('upload [file]', { isDefault: true })
+    .description('Upload a file to S3')
     .option('-o, --output <name>', 'Custom output filename')
-    .option('-d, --delete', 'Delete file from S3 instead of uploading')
-    .addHelpText(
-      'after',
-      `
+    .action(async (file, options) => {
+      if (!file) {
+        program.help();
+        return;
+      }
+      await loadConfig();
+      const client = createS3Client();
+      const s3FileName = options.output
+        ? sanitizeFileName(options.output)
+        : sanitizeFileName(basename(file));
+      await uploadFile(client, file, s3FileName);
+    });
+
+  // Delete command
+  program
+    .command('delete [file]')
+    .description('Delete a file from S3')
+    .action(async file => {
+      if (!file) {
+        program.help();
+        return;
+      }
+      await loadConfig();
+      const client = createS3Client();
+      await deleteFile(client, file);
+    });
+
+  program.addHelpText(
+    'after',
+    `
 Example usage:
-  $ ff image.jpg                    # Upload with original filename
-  $ ff data.csv -o report.csv       # Upload with custom filename
-  $ ff image.jpg -d                 # Delete file from S3
+  $ ff check                      # Test S3 connection
+  $ ff upload image.jpg           # Upload with original filename
+  $ ff upload data.csv -o report  # Upload with custom filename
+  $ ff delete image.jpg          # Delete file from S3
+  $ ff image.jpg                 # Upload (shorthand)
 
 Configuration:
   Create a config file at ~/.config/filesfly/filesfly.json with:
@@ -38,7 +80,9 @@ Configuration:
     "REGION": "your-region"
   }
 `
-    );
+  );
+
+  return program;
 }
 
 /**
@@ -47,19 +91,4 @@ Configuration:
 export async function handleCLI(): Promise<void> {
   const program = setupCLI();
   program.parse();
-
-  await loadConfig();
-
-  const options = program.opts();
-  const filePath = program.args[0];
-  const client = createS3Client();
-
-  if (options.delete) {
-    await deleteFile(client, filePath);
-  } else {
-    const s3FileName = options.output
-      ? sanitizeFileName(options.output)
-      : sanitizeFileName(basename(filePath));
-    await uploadFile(client, filePath, s3FileName);
-  }
 }
