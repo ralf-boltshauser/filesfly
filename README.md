@@ -2,7 +2,11 @@
 
 A blazingly fast S3 file uploader with a beautiful CLI interface, powered by Bun.
 
-![Demo](./assets/demo.gif)
+## 🎥 Demo
+
+Watch FilesFly in action - blazing fast uploads with a beautiful progress bar:
+
+![FilesFly Demo](./assets/demo.gif)
 
 ## ✨ Features
 
