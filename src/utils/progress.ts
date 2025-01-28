@@ -1,6 +1,7 @@
 import colors from 'ansi-colors';
 import type { BunFile } from 'bun';
 import cliProgress from 'cli-progress';
+import ora from 'ora';
 
 /**
  * Streams a file with progress bar
@@ -13,6 +14,9 @@ export async function streamWithProgress(
   writer: any,
   fileSize: number
 ): Promise<void> {
+  console.log(colors.cyan('📦 First, we need to buffer your file...'));
+  console.log('');
+
   const progressBar = new cliProgress.SingleBar({
     format:
       colors.cyan('{bar}') +
@@ -20,7 +24,7 @@ export async function streamWithProgress(
     barCompleteChar: '\u2588',
     barIncompleteChar: '\u2591',
     hideCursor: true,
-    clearOnComplete: true,
+    clearOnComplete: false,
   });
 
   progressBar.start(fileSize, 0);
@@ -47,6 +51,19 @@ export async function streamWithProgress(
     }
   } while (!result.done);
 
-  await writer.end();
   progressBar.stop();
+  console.log(''); // Add a newline for better spacing
+
+  const spinner = ora({
+    text: colors.yellow(
+      '🚀 Uploading to the cloud... Hang tight! (Server-side upload in progress) 🌟'
+    ),
+    color: 'yellow',
+  }).start();
+
+  try {
+    await writer.end();
+  } finally {
+    spinner.stop();
+  }
 }
