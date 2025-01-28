@@ -71,7 +71,7 @@ Example usage:
   $ ff image.jpg                 # Upload (shorthand)
 
 Configuration:
-  Create a config file at ~/.config/filesfly/filesfly.json with:
+  Create a config file at ~/.config/filesfly/filesfly.json:
   {
     "ENDPOINT": "your-endpoint",
     "ACCESS_KEY_ID": "your-access-key",

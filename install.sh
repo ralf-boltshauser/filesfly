@@ -32,10 +32,30 @@ mkdir -p "$CONFIG_DIR"
 mkdir -p "$INSTALL_DIR"
 mkdir -p "$HOME/.local/bin"
 
-# Clone the repository
-echo -e "${BLUE}Cloning FilesFly repository...${NC}"
-git clone https://github.com/ralf-boltshauser/filesfly.git "$INSTALL_DIR"
-cd "$INSTALL_DIR"
+# Check if already installed and clean up if necessary
+if [ -d "$INSTALL_DIR/.git" ]; then
+    echo -e "${BLUE}Existing installation found. Updating...${NC}"
+    # Unlink the current binary
+    bun unlink filesfly 2>/dev/null || true
+    # Clean the install directory but preserve .git for faster updates
+    find "$INSTALL_DIR" -mindepth 1 -not -path '*/.git*' -delete
+else
+    echo -e "${BLUE}Fresh installation...${NC}"
+    rm -rf "$INSTALL_DIR"
+    mkdir -p "$INSTALL_DIR"
+fi
+
+# Clone/update repository
+if [ -d "$INSTALL_DIR/.git" ]; then
+    echo -e "${BLUE}Pulling latest changes...${NC}"
+    cd "$INSTALL_DIR"
+    git fetch origin
+    git reset --hard origin/master
+else
+    echo -e "${BLUE}Cloning FilesFly repository...${NC}"
+    git clone https://github.com/ralf-boltshauser/filesfly.git "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+fi
 
 # Make source binary executable
 chmod +x bin/ff.ts
