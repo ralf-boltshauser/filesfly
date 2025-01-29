@@ -112,3 +112,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built with [Bun](https://bun.sh)
 - Progress bar by [cli-progress](https://github.com/npkgz/cli-progress)
 - Colors by [ansi-colors](https://github.com/doowb/ansi-colors)
+
+## 💡 Ideas
+
+- [ ] Add a "download" command to download a file from S3
+- [ ] Add a "list" command to list all files in a bucket, with simple filters and sorting
+- [ ] Add a "search" command to search for files in a bucket
+
+## ↗ Ways this could develop
+- [ ] DB Backuper: You just plug and play your db credentials, s3 credentials and backup config like interval and it just pushed sql db backups.
+- [ ] File Versioning: Instead of "final_edit_v3.mp4", v4, v5, v6 _final_final... you just use a simple cli to keep track of versions and roll backs etc. 
+- [ ] Simple Backup: Just simple folders that can be specified to be backuped once a day or so. 
