@@ -115,7 +115,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 💡 Ideas
 
-- [ ] Add a "download" command to download a file from S3
 - [ ] Add a "list" command to list all files in a bucket, with simple filters and sorting
 - [ ] Add a "search" command to search for files in a bucket
 

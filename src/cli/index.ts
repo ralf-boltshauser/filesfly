@@ -6,6 +6,7 @@ import packageJson from '../../package.json';
 import { loadConfig } from '../config';
 import { checkConnection, createS3Client } from '../s3/client';
 import { deleteFile } from '../s3/delete';
+import { downloadFile } from '../s3/download';
 import { uploadFile } from '../s3/upload';
 import { sanitizeFileName } from '../utils/file';
 import { confirm } from '../utils/prompt';
@@ -156,6 +157,21 @@ export function setupCLI(): Command {
       await deleteFile(client, file);
     });
 
+  // Download command
+  program
+    .command('download <file>')
+    .description('Download a file from S3')
+    .option('-o, --output <path>', 'Custom output path for the downloaded file')
+    .action(async (file: string, options) => {
+      await loadConfig();
+      const client = createS3Client();
+
+      const outputPath = options.output || file;
+      console.log(colors.cyan(`📥 Downloading ${colors.bold(file)}...`));
+
+      await downloadFile(client, file, outputPath);
+    });
+
   program.addHelpText(
     'after',
     `
@@ -163,6 +179,8 @@ Example usage:
   $ ff check                      # Test S3 connection
   $ ff upload image.jpg           # Upload with original filename
   $ ff upload data.csv -o report  # Upload with custom filename
+  $ ff download image.jpg         # Download with original filename
+  $ ff download data.csv -o local.csv  # Download with custom filename
   $ ff delete image.jpg          # Delete file from S3
   $ ff image.jpg                 # Upload (shorthand)
 
